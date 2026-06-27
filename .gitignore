@@ -45,8 +45,8 @@ desktop.ini
 *.swp
 *.swo
 
-## Claude Code (local settings only)
-.claude/settings.local.json
+## Local dev tools
+.claude/
 
 ## Logs
 *.log
