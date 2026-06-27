@@ -11,7 +11,7 @@ COPY src/AgendaFlow.Web/ ./
 RUN npm run build
 
 # ── Runtime stage (nginx) ─────────────────────────────────────────
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.31-alpine AS runtime
 
 # Non-root nginx
 RUN addgroup -g 1001 -S appgroup && \
