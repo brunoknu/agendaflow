@@ -1,0 +1,16 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/node_modules
+**/dist
+**/bin
+**/obj
+**/*.md
+**/*.log
+**/.env
+**/.env.*
+**/coverage
+**/TestResults
+**/*.trx
+docker/data
