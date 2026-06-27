@@ -93,7 +93,8 @@ public record ProfessionalResponse(
     string? Email,
     string? Phone,
     bool IsActive,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    IReadOnlyList<Guid>? ServiceIds = null);
 
 // ── Availability ─────────────────────────────────────────────────
 

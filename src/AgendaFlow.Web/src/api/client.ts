@@ -154,6 +154,7 @@ export interface ProfessionalDto {
   phone?: string;
   isActive: boolean;
   createdAtUtc: string;
+  serviceIds?: string[];
 }
 
 export const professionalsApi = {
@@ -264,4 +265,30 @@ export const publicApi = {
 
   cancelByToken: (token: string) =>
     api.post<{ message: string }>(`/api/public/bookings/cancel?token=${encodeURIComponent(token)}`),
+};
+
+// ── Reports ───────────────────────────────────────────────────────
+
+export interface AppointmentsReport {
+  from: string;
+  to: string;
+  total: number;
+  completed: number;
+  cancelled: number;
+  noShow: number;
+  cancellationRate: number;
+  byStatus: { status: string; count: number }[];
+  byProfessional: { professionalName: string; count: number }[];
+  byService: { serviceName: string; count: number }[];
+  byDay: { date: string; count: number }[];
+}
+
+export const reportsApi = {
+  appointments: (from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString();
+    return api.get<AppointmentsReport>(`/api/reports/appointments${qs ? `?${qs}` : ''}`);
+  },
 };

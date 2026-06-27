@@ -143,7 +143,7 @@ public sealed class AuthController : ControllerBase
         if (user is not null && await _userManager.IsEmailConfirmedAsync(user))
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var resetUrl = $"{Request.Scheme}://{Request.Host}/reset-password?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+            var resetUrl = $"{Request.Scheme}://{Request.Host}/reset-password?email={Uri.EscapeDataString(normalizedEmail)}&token={Uri.EscapeDataString(token)}";
 
             await _emailSender.SendAsync(new EmailMessage(
                 normalizedEmail,

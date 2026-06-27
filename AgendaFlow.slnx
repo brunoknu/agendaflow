@@ -6,6 +6,7 @@
     <Project Path="src/AgendaFlow.Infrastructure/AgendaFlow.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/AgendaFlow.IntegrationTests/AgendaFlow.IntegrationTests.csproj" />
     <Project Path="tests/AgendaFlow.UnitTests/AgendaFlow.UnitTests.csproj" />
   </Folder>
 </Solution>

@@ -11,15 +11,24 @@ const queryClient = new QueryClient({
 
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('./pages/app/DashboardPage'));
 const ServicesPage = lazy(() => import('./pages/app/ServicesPage'));
 const AppointmentsPage = lazy(() => import('./pages/app/AppointmentsPage'));
+const ProfessionalsPage = lazy(() => import('./pages/app/ProfessionalsPage'));
+const ReportsPage = lazy(() => import('./pages/app/ReportsPage'));
 const PublicBookingPage = lazy(() => import('./pages/public/PublicBookingPage'));
 const BookingConfirmPage = lazy(() => import('./pages/public/BookingConfirmPage'));
 
+const Spinner = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>Carregando...</div>
+  </div>
+);
+
 function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>;
+  if (isLoading) return <Spinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
@@ -29,17 +38,26 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Carregando...</div>}>
+          <Suspense fallback={<Spinner />}>
             <Routes>
+              {/* Auth */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+              {/* Public booking */}
               <Route path="/agendar/:tenantSlug" element={<PublicBookingPage />} />
               <Route path="/agendamento/confirmar" element={<BookingConfirmPage purpose="confirm" />} />
               <Route path="/agendamento/cancelar" element={<BookingConfirmPage purpose="cancel" />} />
+
+              {/* App (authenticated) */}
               <Route path="/app/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
               <Route path="/app/services" element={<RequireAuth><ServicesPage /></RequireAuth>} />
               <Route path="/app/appointments" element={<RequireAuth><AppointmentsPage /></RequireAuth>} />
+              <Route path="/app/professionals" element={<RequireAuth><ProfessionalsPage /></RequireAuth>} />
+              <Route path="/app/reports" element={<RequireAuth><ReportsPage /></RequireAuth>} />
+
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
             </Routes>
