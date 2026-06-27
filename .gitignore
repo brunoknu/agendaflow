@@ -1,0 +1,53 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/settings.json
+*.userprefs
+**/Properties/launchSettings.json
+
+# Secrets
+appsettings.*.json
+!appsettings.Development.json
+!appsettings.json
+**/*.pfx
+*.p12
+
+# Test results
+TestResults/
+coverage/
+*.trx
+
+## Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+## Environment
+.env
+.env.local
+.env.*.local
+
+## Docker
+docker/data/
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## IDE
+.idea/
+*.swp
+*.swo
+
+## Claude Code (local settings only)
+.claude/settings.local.json
+
+## Logs
+*.log
+logs/

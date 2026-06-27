@@ -1,0 +1,150 @@
+### AgendaFlow API Examples
+### Use with VS Code REST Client or JetBrains HTTP Client
+### Substitua os valores entre {{ }} pelas suas credenciais locais
+
+@base = http://localhost:8080
+
+# ── Auth ──────────────────────────────────────────────────────────
+
+### Registrar conta
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Maria Oliveira",
+  "email": "maria@example.com",
+  "password": "Senha123!"
+}
+
+### Login
+# @name login
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "owner@horizonte.local",
+  "password": "dev_password"
+}
+
+### Dados do usuário logado
+GET {{base}}/api/auth/me
+
+### Logout
+POST {{base}}/api/auth/logout
+
+### Recuperar senha
+POST {{base}}/api/auth/forgot-password
+Content-Type: application/json
+
+{ "email": "maria@example.com" }
+
+# ── CSRF ──────────────────────────────────────────────────────────
+
+### Obter token CSRF (necessário antes de requisições mutantes)
+GET {{base}}/api/antiforgery/token
+
+# ── Serviços ──────────────────────────────────────────────────────
+
+### Listar serviços ativos
+GET {{base}}/api/services?active=true
+
+### Criar serviço
+POST {{base}}/api/services
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "name": "Corte masculino",
+  "description": "Corte com lavagem",
+  "durationMinutes": 30,
+  "price": 45.00,
+  "currency": "BRL",
+  "bufferBeforeMinutes": 5,
+  "bufferAfterMinutes": 5
+}
+
+### Desativar serviço
+PATCH {{base}}/api/services/{{serviceId}}/deactivate
+X-XSRF-TOKEN: {{csrfToken}}
+
+# ── Profissionais ─────────────────────────────────────────────────
+
+### Listar profissionais
+GET {{base}}/api/professionals
+
+### Criar profissional
+POST {{base}}/api/professionals
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "name": "Carlos Souza",
+  "email": "carlos@horizonte.local",
+  "phone": "(11) 99999-0001"
+}
+
+# ── Disponibilidade ───────────────────────────────────────────────
+
+### Configurar regra de disponibilidade (segunda a sexta, 9h–17h)
+POST {{base}}/api/professionals/{{professionalId}}/availability/rules
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "dayOfWeek": 1,
+  "startLocalTime": "09:00:00",
+  "endLocalTime": "17:00:00",
+  "slotIntervalMinutes": 30
+}
+
+# ── Agendamentos ──────────────────────────────────────────────────
+
+### Listar agendamentos (com filtros)
+GET {{base}}/api/appointments?page=1&pageSize=25&status=Confirmed
+
+### Atualizar status
+PATCH {{base}}/api/appointments/{{appointmentId}}/status
+Content-Type: application/json
+X-XSRF-TOKEN: {{csrfToken}}
+
+{
+  "newStatus": "CheckedIn",
+  "reason": "Cliente chegou"
+}
+
+# ── Página pública ────────────────────────────────────────────────
+
+### Serviços disponíveis (sem autenticação)
+GET {{base}}/api/public/horizonte/services
+
+### Profissionais que oferecem um serviço
+GET {{base}}/api/public/horizonte/professionals?serviceId={{serviceId}}
+
+### Horários disponíveis
+GET {{base}}/api/public/horizonte/availability?professionalId={{professionalId}}&serviceId={{serviceId}}&date=2025-07-14
+
+### Criar agendamento público
+POST {{base}}/api/public/horizonte/appointments
+Content-Type: application/json
+
+{
+  "professionalId": "{{professionalId}}",
+  "serviceId": "{{serviceId}}",
+  "startAtUtc": "2025-07-14T12:00:00Z",
+  "customerName": "João da Silva",
+  "customerEmail": "joao@example.com",
+  "customerPhone": "(11) 98888-7777",
+  "notes": "Primeira visita",
+  "idempotencyKey": "joao@example.com-2025-07-14T12:00:00Z-{{serviceId}}"
+}
+
+### Confirmar agendamento por token
+POST {{base}}/api/public/bookings/confirm?token={{confirmationToken}}
+
+### Cancelar agendamento por token
+POST {{base}}/api/public/bookings/cancel?token={{cancellationToken}}
+
+# ── Health checks ─────────────────────────────────────────────────
+
+GET {{base}}/health/live
+GET {{base}}/health/ready

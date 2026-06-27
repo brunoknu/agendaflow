@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AgendaFlow.Api/AgendaFlow.Api.csproj" />
+    <Project Path="src/AgendaFlow.Application/AgendaFlow.Application.csproj" />
+    <Project Path="src/AgendaFlow.Domain/AgendaFlow.Domain.csproj" />
+    <Project Path="src/AgendaFlow.Infrastructure/AgendaFlow.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AgendaFlow.UnitTests/AgendaFlow.UnitTests.csproj" />
+  </Folder>
+</Solution>

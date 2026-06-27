@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────
+  db:
+    image: postgres:16.9-alpine
+    container_name: agendaflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agendaflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD:-dev_root_password}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "5432:5432"  # expose only for dev; remove in production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agendaflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+  # ── Mailpit (dev email) ───────────────────────────────────────
+  mailpit:
+    image: axllent/mailpit:v1.23
+    container_name: agendaflow-mail
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - internal
+
+  # ── API ───────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: agendaflow-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=agendaflow;
+        Username=agendaflow_app;Password=${APP_DB_PASSWORD:-dev_app_password};
+        Include Error Detail=false
+      Email__Host: mailpit
+      Email__Port: "1025"
+      Email__UseSsl: "false"
+      Email__SenderEmail: noreply@agendaflow.local
+      Email__SenderName: AgendaFlow
+      Cors__AllowedOrigins__0: "http://localhost:5173"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - internal
+
+  # ── Frontend ──────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: agendaflow-web
+    restart: unless-stopped
+    ports:
+      - "5173:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

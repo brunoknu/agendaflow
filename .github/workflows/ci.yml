@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  NODE_VERSION: "22"
+
+jobs:
+  # ── .NET Backend ─────────────────────────────────────────────
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore -warnaserror
+
+      - name: Unit tests
+        run: >
+          dotnet test tests/AgendaFlow.UnitTests/
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=unit-test-results.trx"
+          --collect "XPlat Code Coverage"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: "**/TestResults/*.trx"
+
+      # Integration tests require Docker (PostgreSQL via Testcontainers)
+      # They run in a separate job that can be toggled on/off
+      - name: Integration tests
+        if: github.event_name == 'push'
+        run: >
+          dotnet test tests/AgendaFlow.IntegrationTests/
+          --configuration Release
+          --logger "trx;LogFileName=integration-test-results.trx"
+        continue-on-error: false
+
+  # ── Frontend ──────────────────────────────────────────────────
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: src/AgendaFlow.Web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/AgendaFlow.Web/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+  # ── Security scans ────────────────────────────────────────────
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp, javascript
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build for CodeQL
+        run: dotnet build --configuration Release
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: .NET vulnerability audit
+        run: dotnet list package --vulnerable --include-transitive
+        continue-on-error: false
+
+      - name: npm audit
+        working-directory: src/AgendaFlow.Web
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+  # ── Dependency updates ────────────────────────────────────────
+  # Configured in .github/dependabot.yml (see below)
